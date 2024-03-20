@@ -4,6 +4,7 @@ import cors from "cors";
 import userRoute from "./src/routes/user.js";
 import questionRoute from "./src/routes/question.js";
 import answerRoute from "./src/routes/answer.js";
+import articleRoute from "./src/routes/article.js";
 
 import "dotenv/config";
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use("/users", userRoute);
 app.use(questionRoute);
 app.use(answerRoute);
+app.use(articleRoute);
 
 mongoose
   .connect(process.env.DB_CONNECTION)
