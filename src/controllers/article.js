@@ -1,4 +1,5 @@
 import ArticleModel from "../models/article.js";
+import QuestionModel from "../models/question.js";
 import {
   S3Client,
   PutObjectCommand,
@@ -9,6 +10,7 @@ import crypto from "crypto";
 import dotenv from "dotenv";
 import sharp from "sharp";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
@@ -38,7 +40,7 @@ const INSERT_ARTICLE = async (req, res) => {
     // const caption = req.body.caption;
 
     const fileBuffer = await sharp(file.buffer)
-      .resize({ height: 500, width: 700, fit: "contain" })
+      .resize({ height: 500, width: 700, fit: "cover" })
       .toBuffer();
 
     // Configure the upload details to send to S3
@@ -67,14 +69,41 @@ const INSERT_ARTICLE = async (req, res) => {
     // Format the date and time as "yyyy-mm-dd HH:MM"
     const formattedDateTime = `${year}-${month}-${day} ${hours}:${minutes}`;
 
+    const jwt_token = req.headers.authorization;
+
+    jwt.verify(jwt_token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return res.status(401).json({ message: "Must be logged in" });
+      }
+
+      req.body.userId = decoded.userId;
+    });
+
+    let article_title = req.body.article_title;
+
+    // If article_title is an empty string, fetch it from the QuestionModel
+    if (article_title === "") {
+      const question = await QuestionModel.findOne({
+        _id: req.body.question_id,
+      });
+      console.log("question", question);
+      if (question) {
+        article_title = question.question_title;
+      }
+    }
+    console.log("req.body", req.body);
+    console.log("article_title", article_title);
+
     const article = new ArticleModel({
-      article_title: req.body.article_title,
+      article_title: article_title,
       question_id: req.body.question_id,
       imageName: fileName,
       caption: req.body.caption,
       // article_text: req.body.article_text,
       date: formattedDateTime,
-      gained_likes_number: 0,
+
+      // gained_likes_number: 0,
+      userId: req.body.userId,
     });
 
     // Save the image name to the database. Any other req.body data can be saved here too but we don't need any other image data.
@@ -100,6 +129,14 @@ const GET_ALL_ARTICLES = async (req, res) => {
 
     for (let article of articles) {
       // For each post, generate a signed URL and save it to the post object
+      const question = await QuestionModel.findOne({
+        _id: article.question_id,
+      });
+      if (question) {
+        article.gained_likes_number = question.gained_likes_number;
+        article.comments = question.answers.length;
+      }
+      // Generate signed URL for the article's image
       article.imageUrl = await getSignedUrl(
         s3Client,
         new GetObjectCommand({
@@ -110,19 +147,9 @@ const GET_ALL_ARTICLES = async (req, res) => {
       );
     }
 
-    return res.status(200).json({ articles: articles });
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json({ message: "Something went wrong" });
-  }
-};
+    console.log("articles", articles);
 
-const GET_ALL_USER_QUESTIONS = async (req, res) => {
-  try {
-    const questions = await QuestionModel.find({
-      user_id: req.params.userId,
-    }).sort({ date: -1 });
-    return res.status(200).json({ questions: questions });
+    return res.status(200).json({ articles: articles });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Something went wrong" });
@@ -161,40 +188,6 @@ const DELETE_QUESTION = async (req, res) => {
           "Unauthorized: User does not have permission to delete this question",
       });
     }
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json({ message: "Something went wrong" });
-  }
-};
-
-const UPVOTE_QUESTION = async (req, res) => {
-  try {
-    const question = await QuestionModel.findById(req.params.id);
-    question.gained_likes_number += 1;
-
-    const response = await question.save();
-
-    res.status(200).json({
-      message: response,
-      gained_likes_number: question.gained_likes_number,
-    });
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json({ message: "Something went wrong" });
-  }
-};
-
-const DOWNVOTE_QUESTION = async (req, res) => {
-  try {
-    const question = await QuestionModel.findById(req.params.id);
-    question.gained_likes_number -= 1;
-
-    const response = await question.save();
-
-    res.status(200).json({
-      message: response,
-      gained_likes_number: question.gained_likes_number,
-    });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Something went wrong" });

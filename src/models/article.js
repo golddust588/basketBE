@@ -11,6 +11,7 @@ const articleSchema = mongoose.Schema({
   question_id: { type: String, required: true },
   comments: { type: Number },
   gained_likes_number: { type: Number },
+  userId: { type: String, required: true },
 });
 
 export default mongoose.model("Article", articleSchema);

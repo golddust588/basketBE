@@ -8,7 +8,7 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-router.get("/articles", auth, GET_ALL_ARTICLES);
+router.get("/articles", GET_ALL_ARTICLES);
 router.post("/article", auth, upload.single("image"), INSERT_ARTICLE);
 
 export default router;
