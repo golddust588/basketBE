@@ -7,6 +7,8 @@ const answerSchema = mongoose.Schema({
   gained_likes_number: { type: Number, required: true },
   question_id: { type: String, required: true },
   user_id: { type: String, required: true },
+  userName: { type: String },
+  isArchived: { type: Boolean, required: true },
 });
 
 export default mongoose.model("Answer", answerSchema);

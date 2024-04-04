@@ -1,4 +1,5 @@
 import QuestionModel from "../models/question.js";
+import UserModel from "../models/user.js";
 
 const INSERT_QUESTION = async (req, res) => {
   try {
@@ -22,6 +23,7 @@ const INSERT_QUESTION = async (req, res) => {
       date: formattedDateTime,
       gained_likes_number: 0,
       user_id: req.body.userId,
+      isArchived: false,
     });
 
     const response = await question.save();
@@ -35,7 +37,19 @@ const INSERT_QUESTION = async (req, res) => {
 
 const GET_ALL_QUESTIONS = async (req, res) => {
   try {
+    // Retrieve all questions sorted by date
     const questions = await QuestionModel.find().sort({ date: -1 });
+
+    // Loop through each question
+    for (let i = 0; i < questions.length; i++) {
+      // Find the user associated with the question
+      const user = await UserModel.findOne({ _id: questions[i].user_id });
+
+      // Add the user's name to the question object
+      questions[i].userName = user ? user.name : "Vartotojas nerastas"; // Assuming "name" is the field in UserModel representing the user's name
+    }
+
+    // Send the modified list of questions with user names
     return res.status(200).json({ questions: questions });
   } catch (err) {
     console.log(err);
@@ -46,8 +60,18 @@ const GET_ALL_QUESTIONS = async (req, res) => {
 const GET_ALL_USER_QUESTIONS = async (req, res) => {
   try {
     const questions = await QuestionModel.find({
-      user_id: req.params.userId,
+      user_id: req.body.userId,
     }).sort({ date: -1 });
+
+    // Loop through each question
+    for (let i = 0; i < questions.length; i++) {
+      // Find the user associated with the question
+      const user = await UserModel.findOne({ _id: questions[i].user_id });
+
+      // Add the user's name to the question object
+      questions[i].userName = user ? user.name : "Vartotojas nerastas"; // Assuming "name" is the field in UserModel representing the user's name
+    }
+
     return res.status(200).json({ questions: questions });
   } catch (err) {
     console.log(err);
@@ -58,6 +82,10 @@ const GET_ALL_USER_QUESTIONS = async (req, res) => {
 const GET_QUESTION_BY_ID = async (req, res) => {
   try {
     const question = await QuestionModel.findOne({ _id: req.params.id });
+    const user = await UserModel.findOne({ _id: question.user_id });
+
+    // Add the user's name to the question object
+    question.userName = user ? user.name : "Vartotojas nerastas"; // Assuming "name" is the field in UserModel representing the user's name
 
     if (!question) {
       return res.status(404).json({ message: "Question not found" });

@@ -1,5 +1,6 @@
 import AnswerModel from "../models/answer.js";
 import QuestionModel from "../models/question.js";
+import UserModel from "../models/user.js";
 
 const INSERT_ANSWER = async (req, res) => {
   try {
@@ -23,6 +24,7 @@ const INSERT_ANSWER = async (req, res) => {
       gained_likes_number: 0,
       question_id: req.params.id,
       user_id: req.body.userId,
+      isArchived: false,
     });
 
     const response = await answer.save();
@@ -46,6 +48,16 @@ const GET_ALL_QUESTION_ANSWERS = async (req, res) => {
     const answers = await AnswerModel.find({ question_id: req.params.id }).sort(
       { date: "asc" }
     );
+
+    for (let i = 0; i < answers.length; i++) {
+      // Find the user associated with the question
+      const user = await UserModel.findOne({ _id: answers[i].user_id });
+
+      // Add the user's name to the question object
+      answers[i].userName = user ? user.name : "Vartotojas nerastas"; // Assuming "name" is the field in UserModel representing the user's name
+      console.log("user", user);
+      console.log("question", answers[i]);
+    }
 
     return res.status(200).json({ answers: answers });
   } catch (err) {

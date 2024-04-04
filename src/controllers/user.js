@@ -1,8 +1,15 @@
 import UserModel from "../models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import nodemailer from "nodemailer";
 
 const REGISTER_USER = async (req, res) => {
+  // Generate a random confirmation token
+  const generateToken = () => {
+    return crypto.randomBytes(20).toString("hex");
+  };
+
   try {
     const existingUser = await UserModel.findOne({ email: req.body.email });
 
@@ -21,7 +28,31 @@ const REGISTER_USER = async (req, res) => {
       email: req.body.email,
       password: hash,
       name: capitalizedName,
+      admin: false,
+      isBanned: false,
+      emailToken: generateToken(),
     });
+
+    const transporter = nodemailer.createTransport({
+      // Configure transporter (SMTP, etc.)
+    });
+    const confirmationLink = `http://localhost:${process.env.PORT}/users/confirm?token=${token}`; // Change to your actual confirmation endpoint
+    transporter.sendMail(
+      {
+        to: req.body.email,
+        subject: "Confirm your email address",
+        html: `Click <a href="${confirmationLink}">here</a> to confirm your email address.`,
+      },
+      (err, info) => {
+        if (err) {
+          console.error("Error sending confirmation email:", err);
+          res.status(500).json({ message: "Error sending confirmation email" });
+        } else {
+          console.log("Confirmation email sent:", info.response);
+          res.status(200).json({ message: "Confirmation email sent" });
+        }
+      }
+    );
 
     const response = await user.save();
 
@@ -50,6 +81,48 @@ const REGISTER_USER = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({ status: "Something went wrong" });
+  }
+};
+
+const VERIFY_EMAIL = async (req, res) => {
+  try {
+    const emailToken = req.body.emailToken;
+    if (!emailToken) return res.status(404).json("EmailToken not found...");
+    const user = await UserModel.findOne({ emailToken });
+    if (user) {
+      user.emailToken = null;
+      user.isVerified = true;
+
+      const response = await user.save();
+
+      const jwt_token = jwt.sign(
+        { email: user.email, userId: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: "12h" },
+        { algorithm: "RS256" }
+      );
+
+      const jwt_refresh_token = jwt.sign(
+        { email: user.email, userId: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: "24h" },
+        { algorithm: "RS256" }
+      );
+
+      return res.status(201).json({
+        status: "User registered",
+        name: user.name,
+        user_id: user._id,
+        response: response,
+        jwt_token: jwt_token,
+        jwt_refresh_token: jwt_refresh_token,
+        isVerified: user?.isVerified,
+      });
+    } else
+      return res.status(404).json("Email verification failed, invalid token!");
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err.message);
   }
 };
 
@@ -89,4 +162,4 @@ const LOGIN = async (req, res) => {
   });
 };
 
-export { REGISTER_USER, LOGIN };
+export { REGISTER_USER, VERIFY_EMAIL, LOGIN };

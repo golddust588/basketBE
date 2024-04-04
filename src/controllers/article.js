@@ -104,6 +104,7 @@ const INSERT_ARTICLE = async (req, res) => {
 
       // gained_likes_number: 0,
       userId: req.body.userId,
+      isArchived: false,
     });
 
     // Save the image name to the database. Any other req.body data can be saved here too but we don't need any other image data.
@@ -156,42 +157,42 @@ const GET_ALL_ARTICLES = async (req, res) => {
   }
 };
 
-const GET_QUESTION_BY_ID = async (req, res) => {
-  try {
-    const question = await QuestionModel.findOne({ _id: req.params.id });
+// const GET_QUESTION_BY_ID = async (req, res) => {
+//   try {
+//     const question = await QuestionModel.findOne({ _id: req.params.id });
 
-    if (!question) {
-      return res.status(404).json({ message: "Question not found" });
-    }
+//     if (!question) {
+//       return res.status(404).json({ message: "Question not found" });
+//     }
 
-    return res.status(200).json({ question: question });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Something went wrong" });
-  }
-};
+//     return res.status(200).json({ question: question });
+//   } catch (err) {
+//     console.error(err);
+//     return res.status(500).json({ message: "Something went wrong" });
+//   }
+// };
 
-const DELETE_QUESTION = async (req, res) => {
-  try {
-    const question = await QuestionModel.findById(req.params.id);
+// const DELETE_QUESTION = async (req, res) => {
+//   try {
+//     const question = await QuestionModel.findById(req.params.id);
 
-    if (!question) {
-      return res.status(404).json({ message: "Question not found" });
-    }
+//     if (!question) {
+//       return res.status(404).json({ message: "Question not found" });
+//     }
 
-    if (req.body.userId === question.user_id) {
-      const response = await QuestionModel.deleteOne({ _id: req.params.id });
-      return res.status(200).json({ response: response });
-    } else {
-      return res.status(403).json({
-        message:
-          "Unauthorized: User does not have permission to delete this question",
-      });
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json({ message: "Something went wrong" });
-  }
-};
+//     if (req.body.userId === question.user_id) {
+//       const response = await QuestionModel.deleteOne({ _id: req.params.id });
+//       return res.status(200).json({ response: response });
+//     } else {
+//       return res.status(403).json({
+//         message:
+//           "Unauthorized: User does not have permission to delete this question",
+//       });
+//     }
+//   } catch (err) {
+//     console.log(err);
+//     return res.status(500).json({ message: "Something went wrong" });
+//   }
+// };
 
 export { INSERT_ARTICLE, GET_ALL_ARTICLES };

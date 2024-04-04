@@ -8,6 +8,8 @@ const questionSchema = mongoose.Schema({
   id: { type: String },
   user_id: { type: String, required: true },
   answers: { type: Array, required: true },
+  userName: { type: String },
+  isArchived: { type: Boolean, required: true },
 });
 
 export default mongoose.model("Question", questionSchema);

@@ -12,6 +12,7 @@ const articleSchema = mongoose.Schema({
   comments: { type: Number },
   gained_likes_number: { type: Number },
   userId: { type: String, required: true },
+  isArchived: { type: Boolean, required: true },
 });
 
 export default mongoose.model("Article", articleSchema);
