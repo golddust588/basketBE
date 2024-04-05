@@ -2,7 +2,8 @@ import UserModel from "../models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
+
+import createMailTransporter from "../utils/createMailTransporter.js";
 
 const REGISTER_USER = async (req, res) => {
   // Generate a random confirmation token
@@ -33,14 +34,12 @@ const REGISTER_USER = async (req, res) => {
       emailToken: generateToken(),
     });
 
-    const transporter = nodemailer.createTransport({
-      // Configure transporter (SMTP, etc.)
-    });
-    const confirmationLink = `http://localhost:${process.env.PORT}/users/confirm?token=${token}`; // Change to your actual confirmation endpoint
+    const transporter = createMailTransporter();
+    const confirmationLink = `http://${process.env.CLIENT_URL}/verifyEmail?emailToken=${user.emailToken}`; // Change to your actual confirmation endpoint
     transporter.sendMail(
       {
         to: req.body.email,
-        subject: "Confirm your email address",
+        subject: "Confirm your email address for Krepsinio Forumas acc.",
         html: `Click <a href="${confirmationLink}">here</a> to confirm your email address.`,
       },
       (err, info) => {
@@ -54,29 +53,32 @@ const REGISTER_USER = async (req, res) => {
       }
     );
 
+    console.log("user", user);
+    console.log("confirmation link", confirmationLink);
+
     const response = await user.save();
 
-    const jwt_token = jwt.sign(
-      { email: user.email, userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "12h" },
-      { algorithm: "RS256" }
-    );
+    // const jwt_token = jwt.sign(
+    //   { email: user.email, userId: user._id },
+    //   process.env.JWT_SECRET,
+    //   { expiresIn: "12h" },
+    //   { algorithm: "RS256" }
+    // );
 
-    const jwt_refresh_token = jwt.sign(
-      { email: user.email, userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" },
-      { algorithm: "RS256" }
-    );
+    // const jwt_refresh_token = jwt.sign(
+    //   { email: user.email, userId: user._id },
+    //   process.env.JWT_SECRET,
+    //   { expiresIn: "24h" },
+    //   { algorithm: "RS256" }
+    // );
 
     return res.status(201).json({
       status: "User registered",
       name: user.name,
       user_id: user._id,
       response: response,
-      jwt_token: jwt_token,
-      jwt_refresh_token: jwt_refresh_token,
+      // jwt_token: jwt_token,
+      // jwt_refresh_token: jwt_refresh_token,
     });
   } catch (err) {
     console.log(err);
