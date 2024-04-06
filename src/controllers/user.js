@@ -89,6 +89,7 @@ const REGISTER_USER = async (req, res) => {
 const VERIFY_EMAIL = async (req, res) => {
   try {
     const emailToken = req.body.emailToken;
+    console.log("emailtoken", emailToken);
     if (!emailToken) return res.status(404).json("EmailToken not found...");
     const user = await UserModel.findOne({ emailToken });
     if (user) {
@@ -111,7 +112,7 @@ const VERIFY_EMAIL = async (req, res) => {
         { algorithm: "RS256" }
       );
 
-      return res.status(201).json({
+      return res.status(200).json({
         status: "User registered",
         name: user.name,
         user_id: user._id,
