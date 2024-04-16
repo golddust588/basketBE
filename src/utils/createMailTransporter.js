@@ -2,11 +2,16 @@ import nodemailer from "nodemailer";
 
 const createMailTransporter = () => {
   const transporter = nodemailer.createTransport({
-    service: "hotmail",
+    host: "smtp.mail.yahoo.com",
+    port: 587,
+    service: "Yahoo",
+    secure: false,
     auth: {
-      user: "outlook_C913BF087AD6E946@outlook.com",
+      user: "durubum@yahoo.com",
       pass: process.env.EMAIL_PASS,
     },
+    debug: false,
+    logger: true,
   });
 
   return transporter;

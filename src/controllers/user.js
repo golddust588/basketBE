@@ -35,7 +35,8 @@ const REGISTER_USER = async (req, res) => {
     });
 
     // const transporter = createMailTransporter();
-    const confirmationLink = `http://${process.env.CLIENT_URL}/verifyEmail/${user.emailToken}`; // Change to your actual confirmation endpoint
+    const confirmationLink = `http://${process.env.CLIENT_URL}/verifyEmail/${user.emailToken}`;
+
     // transporter.sendMail(
     //   {
     //     to: req.body.email,
@@ -123,6 +124,10 @@ const LOGIN = async (req, res) => {
   bcrypt.compare(req.body.password, user.password, (err, isPasswordMatch) => {
     if (!isPasswordMatch || err) {
       return res.status(401).json({ message: "Bad authentication" });
+    }
+
+    if (!user.isVerified) {
+      return res.status(401).json({ message: "Email not verified" });
     }
 
     const jwt_token = jwt.sign(
