@@ -34,51 +34,35 @@ const REGISTER_USER = async (req, res) => {
       emailToken: generateToken(),
     });
 
-    const transporter = createMailTransporter();
-    const confirmationLink = `http://${process.env.CLIENT_URL}/verifyEmail?emailToken=${user.emailToken}`; // Change to your actual confirmation endpoint
-    transporter.sendMail(
-      {
-        to: req.body.email,
-        subject: "Confirm your email address for Krepsinio Forumas acc.",
-        html: `Click <a href="${confirmationLink}">here</a> to confirm your email address.`,
-      },
-      (err, info) => {
-        if (err) {
-          console.error("Error sending confirmation email:", err);
-          res.status(500).json({ message: "Error sending confirmation email" });
-        } else {
-          console.log("Confirmation email sent:", info.response);
-          res.status(200).json({ message: "Confirmation email sent" });
-        }
-      }
-    );
+    // const transporter = createMailTransporter();
+    const confirmationLink = `http://${process.env.CLIENT_URL}/verifyEmail/${user.emailToken}`; // Change to your actual confirmation endpoint
+    // transporter.sendMail(
+    //   {
+    //     to: req.body.email,
+    //     subject: "Confirm your email address for Krepsinio Forumas acc.",
+    //     html: `Click <a href="${confirmationLink}">here</a> to confirm your email address.`,
+    //   },
+    //   (err, info) => {
+    //     if (err) {
+    //       console.error("Error sending confirmation email:", err);
+    //       res.status(500).json({ message: "Error sending confirmation email" });
+    //     } else {
+    //       console.log("Confirmation email sent:", info.response);
+    //       res.status(200).json({ message: "Confirmation email sent" });
+    //     }
+    //   }
+    // );
 
     console.log("user", user);
     console.log("confirmation link", confirmationLink);
 
     const response = await user.save();
 
-    // const jwt_token = jwt.sign(
-    //   { email: user.email, userId: user._id },
-    //   process.env.JWT_SECRET,
-    //   { expiresIn: "12h" },
-    //   { algorithm: "RS256" }
-    // );
-
-    // const jwt_refresh_token = jwt.sign(
-    //   { email: user.email, userId: user._id },
-    //   process.env.JWT_SECRET,
-    //   { expiresIn: "24h" },
-    //   { algorithm: "RS256" }
-    // );
-
     return res.status(201).json({
-      status: "User registered",
+      status: "User saved",
       name: user.name,
       user_id: user._id,
       response: response,
-      // jwt_token: jwt_token,
-      // jwt_refresh_token: jwt_refresh_token,
     });
   } catch (err) {
     console.log(err);
@@ -119,7 +103,7 @@ const VERIFY_EMAIL = async (req, res) => {
         response: response,
         jwt_token: jwt_token,
         jwt_refresh_token: jwt_refresh_token,
-        isVerified: user?.isVerified,
+        isVerified: user.isVerified,
       });
     } else
       return res.status(404).json("Email verification failed, invalid token!");
