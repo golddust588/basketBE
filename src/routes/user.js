@@ -5,6 +5,7 @@ import {
   LOGIN,
   VERIFY_EMAIL,
   IS_USER_LOGGED_IN,
+  IS_USER_ADMIN,
 } from "../controllers/user.js";
 
 import {
@@ -18,6 +19,8 @@ import {
 const router = express.Router();
 
 router.get("/is-user-logged-in", auth, IS_USER_LOGGED_IN);
+
+router.get("/is-user-admin", auth, IS_USER_ADMIN);
 
 router.post(
   "/register",

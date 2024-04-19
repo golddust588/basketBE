@@ -9,7 +9,7 @@ const questionSchema = mongoose.Schema({
   user_id: { type: String, required: true },
   answers: { type: Array, required: true },
   userName: { type: String },
-  isArchived: { type: Boolean, required: true },
+  isArchived: { type: Boolean, required: true, default: false },
 });
 
 export default mongoose.model("Question", questionSchema);

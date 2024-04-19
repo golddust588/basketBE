@@ -12,18 +12,28 @@ const REGISTER_USER = async (req, res) => {
   };
 
   try {
-    const existingUser = await UserModel.findOne({ email: req.body.email });
+    const name = req.body.name;
 
-    if (existingUser) {
-      return res.status(400).json({ status: "Email already exists" });
+    const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
+
+    const existingUserByEmail = await UserModel.findOne({
+      email: req.body.email,
+    });
+
+    if (existingUserByEmail) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    const existingUserByName = await UserModel.findOne({
+      name: capitalizedName,
+    });
+
+    if (existingUserByName) {
+      return res.status(400).json({ message: "Name already exists" });
     }
 
     const salt = bcrypt.genSaltSync(10);
     const hash = bcrypt.hashSync(req.body.password, salt);
-
-    const name = req.body.name;
-
-    const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
 
     const user = new UserModel({
       email: req.body.email,
@@ -169,4 +179,20 @@ const IS_USER_LOGGED_IN = async (req, res) => {
   }
 };
 
-export { REGISTER_USER, VERIFY_EMAIL, LOGIN, IS_USER_LOGGED_IN };
+const IS_USER_ADMIN = async (req, res) => {
+  try {
+    const user = await UserModel.findOne({ _id: req.body.userId });
+    console.log("isadmin", user.admin);
+
+    if (user.admin) {
+      return res.status(200).json({ message: true });
+    } else {
+      return res.status(200).json({ message: false });
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err.message);
+  }
+};
+
+export { REGISTER_USER, VERIFY_EMAIL, LOGIN, IS_USER_LOGGED_IN, IS_USER_ADMIN };
