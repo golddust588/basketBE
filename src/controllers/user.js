@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
-import createMailTransporter from "../utils/createMailTransporter.js";
+// import createMailTransporter from "../utils/createMailTransporter.js";
 
 const REGISTER_USER = async (req, res) => {
   // Generate a random confirmation token
@@ -154,4 +154,19 @@ const LOGIN = async (req, res) => {
   });
 };
 
-export { REGISTER_USER, VERIFY_EMAIL, LOGIN };
+const IS_USER_LOGGED_IN = async (req, res) => {
+  try {
+    const user = await UserModel.findOne({ _id: req.body.userId });
+
+    if (user) {
+      return res.status(200).json({ message: true });
+    } else {
+      return res.status(401).json({ message: "Bad authentication" });
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err.message);
+  }
+};
+
+export { REGISTER_USER, VERIFY_EMAIL, LOGIN, IS_USER_LOGGED_IN };

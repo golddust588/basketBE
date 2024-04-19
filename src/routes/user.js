@@ -1,5 +1,11 @@
 import express from "express";
-import { REGISTER_USER, LOGIN, VERIFY_EMAIL } from "../controllers/user.js";
+import auth from "../middlewares/auth.js";
+import {
+  REGISTER_USER,
+  LOGIN,
+  VERIFY_EMAIL,
+  IS_USER_LOGGED_IN,
+} from "../controllers/user.js";
 
 import {
   registerValidationMiddleware,
@@ -10,6 +16,8 @@ import {
   userLoginSchema,
 } from "../validation/userSchema.js";
 const router = express.Router();
+
+router.get("/is-user-logged-in", auth, IS_USER_LOGGED_IN);
 
 router.post(
   "/register",
